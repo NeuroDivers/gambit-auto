@@ -44,7 +44,7 @@ type ProfileResponse = {
   role: UserRole;
 };
 
-type ClientResponse = {
+type CustomerResponse = {
   id: string;
   email: string;
   first_name: string;
@@ -123,31 +123,31 @@ export const useUserData = () => {
         const clientProfiles = profiles.filter(profile => profile.role?.id === CLIENT_ROLE_ID);
         
         if (clientProfiles.length > 0) {
-          // Try to get client data
-          const { data: clients, error: clientsError } = await supabase
-            .from("clients")
+          // Try to get customer data from customers table instead of clients
+          const { data: customers, error: customersError } = await supabase
+            .from("customers")
             .select("*")
             .in('user_id', clientProfiles.map(p => p.id))
-            .returns<ClientResponse[]>();
+            .returns<CustomerResponse[]>();
 
-          // If client data exists, update the corresponding user objects
-          if (!clientsError && clients && clients.length > 0) {
-            clients.forEach(client => {
-              const userIndex = allUsers.findIndex(u => u.id === client.user_id);
+          // If customer data exists, update the corresponding user objects
+          if (!customersError && customers && customers.length > 0) {
+            customers.forEach(customer => {
+              const userIndex = allUsers.findIndex(u => u.id === customer.user_id);
               if (userIndex >= 0) {
                 allUsers[userIndex] = {
                   ...allUsers[userIndex],
-                  email: client.email || allUsers[userIndex].email,
-                  first_name: client.first_name || allUsers[userIndex].first_name,
-                  last_name: client.last_name || allUsers[userIndex].last_name,
-                  phone_number: client.phone_number || allUsers[userIndex].phone_number,
-                  address: client.address || allUsers[userIndex].address,
-                  street_address: client.street_address || allUsers[userIndex].street_address,
-                  unit_number: client.unit_number || allUsers[userIndex].unit_number,
-                  city: client.city || allUsers[userIndex].city,
-                  state_province: client.state_province || allUsers[userIndex].state_province,
-                  postal_code: client.postal_code || allUsers[userIndex].postal_code,
-                  country: client.country || allUsers[userIndex].country,
+                  email: customer.email || allUsers[userIndex].email,
+                  first_name: customer.first_name || allUsers[userIndex].first_name,
+                  last_name: customer.last_name || allUsers[userIndex].last_name,
+                  phone_number: customer.phone_number || allUsers[userIndex].phone_number,
+                  address: customer.address || allUsers[userIndex].address,
+                  street_address: customer.street_address || allUsers[userIndex].street_address,
+                  unit_number: customer.unit_number || allUsers[userIndex].unit_number,
+                  city: customer.city || allUsers[userIndex].city,
+                  state_province: customer.state_province || allUsers[userIndex].state_province,
+                  postal_code: customer.postal_code || allUsers[userIndex].postal_code,
+                  country: customer.country || allUsers[userIndex].country,
                 };
               }
             });
@@ -155,7 +155,7 @@ export const useUserData = () => {
         }
       } catch (error) {
         // Just log the error but continue with basic user data
-        console.error("Error fetching clients:", error);
+        console.error("Error fetching customers:", error);
       }
 
       return allUsers;

@@ -1,174 +1,154 @@
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import StaffSkills from './StaffSkills';
-import { StaffDetailsForm } from './StaffDetailsForm';
-import { StaffWorkOrderHistory } from './StaffWorkOrderHistory';
-import { StaffCommissionRates } from './StaffCommissionRates';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useParams } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { StaffDetailsForm } from "./StaffDetailsForm";
+import { StaffSkills } from "./StaffSkills";
+import { toast } from "sonner";
+import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 
-// Define the ProfileData interface
-interface ProfileData {
+type ProfileData = {
   id: string;
   email: string;
-  first_name: string | null;
-  last_name: string | null;
-  phone_number: string | null;
-  bio: string | null;
-  street_address: string | null;
-  unit_number: string | null;
-  city: string | null;
-  state_province: string | null;
-  postal_code: string | null;
-  country: string | null;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  bio: string;
+  street_address: string;
+  unit_number: string;
+  city: string;
+  state_province: string;
+  postal_code: string;
+  country: string;
   role: {
     id: string;
     name: string;
     nicename: string;
-  } | null;
-}
+  };
+};
 
-export interface StaffDetailsProps {
-  profileId: string;
-}
+export function StaffDetails() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user, profile } = useAuth();
+  const { isAdmin } = useAdminStatus();
+  const [activeSection, setActiveSection] = useState("profile");
 
-export function StaffDetails({ profileId }: StaffDetailsProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        if (!id) return;
 
-  const { data: profileData, isLoading, refetch } = useQuery<ProfileData, Error>({
-    queryKey: ['staff-details', profileId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          phone_number,
-          bio,
-          street_address, 
-          unit_number,
-          city,
-          state_province,
-          postal_code,
-          country,
-          role:role_id (
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(`
             id,
-            name,
-            nicename
-          )
-        `)
-        .eq('id', profileId)
-        .single();
-      
-      if (error) throw error;
-      return data as ProfileData;
-    },
-  });
+            email,
+            first_name,
+            last_name,
+            phone_number,
+            bio,
+            street_address,
+            unit_number,
+            city,
+            state_province,
+            postal_code,
+            country,
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
+          `)
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+        
+        setProfileData(data as unknown as ProfileData);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        toast.error('Failed to load staff profile');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [id]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   if (!profileData) {
-    return <div>Staff profile not found</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <h2 className="text-2xl font-bold mb-4">Staff Not Found</h2>
+        <Button onClick={() => navigate('/staff')}>Return to Staff List</Button>
+      </div>
+    );
   }
 
-  const fullName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Staff Member';
+  const canEditProfile = isAdmin || user?.id === profileData.id;
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>{fullName}</CardTitle>
-          <CardDescription>{profileData.email}</CardDescription>
-          {profileData.role && (
-            <span className="text-sm text-muted-foreground">{profileData.role.nicename}</span>
-          )}
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="ml-auto">
-          <Edit2 className="h-4 w-4 mr-2" />
-          Edit Profile
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">
+          {profileData.first_name} {profileData.last_name}
+        </h1>
+        <Button variant="outline" onClick={() => navigate('/staff')}>
+          Back to Staff List
         </Button>
-      </CardHeader>
-      <CardContent>
-        {isEditing ? (
-          <StaffDetailsForm
-            profileId={profileId}
-            profileData={profileData}
-            onSaved={() => {
-              setIsEditing(false);
-              refetch();
-            }}
-            onClose={() => setIsEditing(false)}
-            role={profileData.role?.name}
-          />
-        ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="skills">Skills</TabsTrigger>
-              <TabsTrigger value="history">Work History</TabsTrigger>
-              <TabsTrigger value="commission">Commission</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="profile">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Contact Information</h3>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Email:</span> {profileData.email}</p>
-                    <p><span className="font-medium">Phone:</span> {profileData.phone_number || 'Not provided'}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Address</h3>
-                  <div className="space-y-2">
-                    {profileData.street_address && (
-                      <p>
-                        {profileData.street_address}
-                        {profileData.unit_number && `, Unit ${profileData.unit_number}`}
-                      </p>
-                    )}
-                    {(profileData.city || profileData.state_province) && (
-                      <p>
-                        {profileData.city}{profileData.city && profileData.state_province && ', '}{profileData.state_province} {profileData.postal_code}
-                      </p>
-                    )}
-                    <p>{profileData.country}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {profileData.bio && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-medium mb-2">Bio</h3>
-                  <p className="text-sm">{profileData.bio}</p>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="skills">
-              <StaffSkills profileId={profileId} />
-            </TabsContent>
-            
-            <TabsContent value="history">
-              <StaffWorkOrderHistory profileId={profileId} />
-            </TabsContent>
-            
-            <TabsContent value="commission">
-              <StaffCommissionRates profileId={profileId} />
-            </TabsContent>
-          </Tabs>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+
+      <div className="flex space-x-2 border-b mb-4">
+        <Button 
+          variant={activeSection === "profile" ? "default" : "ghost"}
+          onClick={() => setActiveSection("profile")}
+          className="rounded-none"
+        >
+          Profile
+        </Button>
+        <Button 
+          variant={activeSection === "skills" ? "default" : "ghost"} 
+          onClick={() => setActiveSection("skills")}
+          className="rounded-none"
+        >
+          Service Skills
+        </Button>
+      </div>
+
+      {activeSection === "profile" && (
+        <Card>
+          <CardContent className="pt-6">
+            <StaffDetailsForm 
+              profileId={profileData.id}
+              onSaved={() => {
+                // Reload the profile
+                setIsLoading(true);
+                window.location.reload();
+              }}
+              role={profileData.role}
+              initialData={profileData}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {activeSection === "skills" && (
+        <StaffSkills 
+          profileId={profileData.id} 
+          isCurrentUser={user?.id === profileData.id}
+        />
+      )}
+    </div>
   );
 }

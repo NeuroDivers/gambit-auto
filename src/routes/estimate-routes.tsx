@@ -40,7 +40,7 @@ export const estimateRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "edit-estimate/:id",
+    path: "estimates/edit/:id",
     element: (
       <PermissionGuard resource="estimates" type="page_access">
         <EstimateDetails />
