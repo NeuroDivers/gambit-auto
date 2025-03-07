@@ -31,7 +31,6 @@ import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
 
 interface Estimate {
   id: string
@@ -318,40 +317,6 @@ export default function EstimatesList() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4 flex flex-col items-center justify-center">
-            <div className="text-2xl font-bold">{stats?.total || 0}</div>
-            <p className="text-sm text-muted-foreground">Total Estimates</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex flex-col items-center justify-center">
-            <div className="text-2xl font-bold">{stats?.draft || 0}</div>
-            <p className="text-sm text-muted-foreground">Draft Estimates</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex flex-col items-center justify-center">
-            <div className="text-2xl font-bold">{stats?.sent || 0}</div>
-            <p className="text-sm text-muted-foreground">Sent Estimates</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex flex-col items-center justify-center">
-            <div className="text-2xl font-bold">{stats?.approved || 0}</div>
-            <p className="text-sm text-muted-foreground">Approved Estimates</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Estimates</h1>
-        <Button onClick={() => navigate("/admin/create-estimate")}>
-          Create Estimate
-        </Button>
-      </div>
-
       <div className="flex items-center justify-between mb-4">
         <Input
           type="search"
