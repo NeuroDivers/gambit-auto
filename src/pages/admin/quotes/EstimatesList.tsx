@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+
 interface Estimate {
   id: string;
   created_at: string;
@@ -21,12 +23,14 @@ interface Estimate {
   client_name: string | null;
   is_archived: boolean;
 }
+
 export default function EstimatesList() {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [selectedEstimateIds, setSelectedEstimateIds] = useState<string[]>([]);
   const [isArchived, setIsArchived] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+
   const {
     data: estimatesData,
     error,
@@ -48,16 +52,18 @@ export default function EstimatesList() {
       return data;
     }
   });
+
   useEffect(() => {
     if (estimatesData) {
       setEstimates(estimatesData);
     }
   }, [estimatesData]);
+
   const columns: ColumnDef<Estimate>[] = [{
     id: "select",
     header: ({
       table
-    }) => <Checkbox checked={table.getIsAllPageRowsSelected() || table.getIsSomePageRowsSelected() && "indeterminate"} onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)} aria-label="Select all" />,
+    }) => <Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")} onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)} aria-label="Select all" />,
     cell: ({
       row
     }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={value => row.toggleSelected(!!value)} aria-label="Select row" />,
@@ -78,7 +84,7 @@ export default function EstimatesList() {
     cell: ({
       row
     }) => <div>
-          <div className="font-medium">{row.original.client_name || 'N/A'}</div>
+          <div className="font-medium">{row.original.client_name || 'Unknown Client'}</div>
           <div className="text-sm text-muted-foreground">
             Est #{row.original.id.substring(0, 8)}
           </div>
@@ -152,6 +158,7 @@ export default function EstimatesList() {
           </DropdownMenu>;
     }
   }];
+
   const table = useReactTable({
     data: estimates,
     columns,
@@ -173,6 +180,7 @@ export default function EstimatesList() {
       }, {} as Record<string, boolean>)
     }
   });
+
   const handleArchiveSelected = async () => {
     if (selectedEstimateIds.length === 0) {
       toast.error("No estimates selected");
@@ -193,6 +201,7 @@ export default function EstimatesList() {
       setSelectedEstimateIds([]);
     }
   };
+
   const handleRestoreSelected = async () => {
     if (selectedEstimateIds.length === 0) {
       toast.error("No estimates selected");
@@ -213,43 +222,25 @@ export default function EstimatesList() {
       setSelectedEstimateIds([]);
     }
   };
-  const {
-    data: stats
-  } = useQuery({
-    queryKey: ["estimateStats"],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("estimates").select("status, is_archived");
-      if (error) throw error;
-      const draft = data.filter(e => e.status === "draft" && !e.is_archived).length;
-      const sent = data.filter(e => e.status === "sent" && !e.is_archived).length;
-      const approved = data.filter(e => e.status === "approved" && !e.is_archived).length;
-      const archived = data.filter(e => e.is_archived).length;
-      return {
-        draft,
-        sent,
-        approved,
-        archived,
-        total: data.length
-      };
-    }
-  });
+
   return <div className="container mx-auto">
       <div className="flex items-center justify-between mb-4">
         <Input type="search" placeholder="Search by client name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="max-w-md" />
-        <div>
+        <div className="flex items-center gap-2">
           <Button variant="secondary" onClick={() => setIsArchived(!isArchived)} className="flex items-center">
             <Filter className="mr-2 h-4 w-4" />
             {isArchived ? "View Active Estimates" : "View Archived Estimates"}
           </Button>
-          {isArchived ? <Button className="ml-2" onClick={handleRestoreSelected} disabled={selectedEstimateIds.length === 0}>
+          {isArchived ? 
+            <Button onClick={handleRestoreSelected} disabled={selectedEstimateIds.length === 0}>
               Restore Selected
-            </Button> : <Button className="ml-2" onClick={handleArchiveSelected} disabled={selectedEstimateIds.length === 0}>
+            </Button> 
+          : 
+            <Button onClick={handleArchiveSelected} disabled={selectedEstimateIds.length === 0}>
               <Archive className="mr-2 h-4 w-4" />
               Archive Selected
-            </Button>}
+            </Button>
+          }
         </div>
       </div>
 
