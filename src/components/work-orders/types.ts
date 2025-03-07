@@ -29,6 +29,22 @@ export interface WorkOrder extends CustomerVehicleRecordInfo {
     first_name: string | null;
     last_name: string | null;
   };
+  // Work order services relationship
+  work_order_services?: Array<{
+    id: string;
+    service_id: string;
+    quantity: number;
+    unit_price: number;
+    commission_rate: number;
+    commission_type: 'percentage' | 'flat';
+    assigned_profile_id?: string | null;
+    service_types?: {
+      id: string;
+      name: string;
+      description: string;
+      base_price: number;
+    }
+  }>;
   // Vehicle fields
   vehicle_make?: string;
   vehicle_model?: string;
@@ -70,7 +86,7 @@ export interface ServiceItemType {
   quantity: number;
   unit_price: number;
   commission_rate: number;
-  commission_type: 'percentage' | 'flat' | 'flat_rate' | null;
+  commission_type: 'percentage' | 'flat' | null;  // Standardized to remove 'flat_rate'
   assigned_profile_id?: string | null;
   description?: string;
   sub_services?: ServiceItemType[];

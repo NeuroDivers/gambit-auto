@@ -16,7 +16,7 @@ export interface ServiceCommission {
   profile_id: string
   service_id: string
   rate: number
-  type: 'percentage' | 'flat'
+  type: 'percentage' | 'flat'  // Standardized to use 'flat' instead of 'flat_rate'
   created_at: string
   updated_at: string
 }

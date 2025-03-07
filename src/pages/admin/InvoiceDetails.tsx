@@ -7,16 +7,21 @@ import { Loader2, ArrowLeft } from "lucide-react"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { InvoiceActions } from "@/components/invoices/sections/InvoiceActions"
 import { useReactToPrint } from 'react-to-print'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { CustomerInfoCard } from "@/components/invoices/sections/CustomerInfoCard"
 import { VehicleInfoCard } from "@/components/invoices/sections/VehicleInfoCard"
 import { InvoiceDetailsCard } from "@/components/invoices/sections/InvoiceDetailsCard"
 import { CommissionsSection } from "@/components/invoices/sections/CommissionsSection"
+import { useInvoiceSubscription } from "@/hooks/useInvoiceSubscription"
 
 export default function InvoiceDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
   const printRef = useRef<HTMLDivElement>(null)
+  const [invoice, setInvoice] = useState<any>(null)
+  
+  // Set up global invoice subscription
+  useInvoiceSubscription()
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -24,7 +29,7 @@ export default function InvoiceDetails() {
     pageStyle: '@page { margin: 1cm }'
   })
 
-  const { data: invoice, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['invoice', id],
     queryFn: async () => {
       if (!id) throw new Error("Invoice ID is required")
@@ -54,6 +59,45 @@ export default function InvoiceDetails() {
     },
     enabled: !!id
   })
+
+  useEffect(() => {
+    if (data) {
+      setInvoice(data)
+    }
+  }, [data])
+
+  useEffect(() => {
+    if (!id) return
+    
+    console.log("Setting up realtime subscription for invoice:", id)
+    
+    const channel = supabase
+      .channel('invoice-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'invoices',
+          filter: `id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Invoice change detected:', payload)
+          if (payload.new && typeof payload.new === 'object') {
+            setInvoice(prevInvoice => {
+              if (!prevInvoice) return payload.new
+              return { ...prevInvoice, ...payload.new }
+            })
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      console.log("Cleaning up realtime subscription")
+      supabase.removeChannel(channel)
+    }
+  }, [id])
 
   if (isLoading) {
     return (

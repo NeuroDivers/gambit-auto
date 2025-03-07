@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -30,9 +29,9 @@ interface CommissionsSectionProps {
 }
 
 export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps) {
-  const queryClient = useQueryClient()
-  const [saving, setSaving] = useState(false)
-  const { profiles } = useAssignableProfiles()
+  const queryClient = useQueryClient();
+  const [saving, setSaving] = useState(false);
+  const { profiles } = useAssignableProfiles();
 
   const handleUpdateCommission = async (
     itemId: string, 
@@ -43,24 +42,29 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
     }
   ) => {
     try {
-      setSaving(true)
+      setSaving(true);
+      
+      // Normalize commission_type here
+      if (updates.commission_type === 'flat_rate') {
+        updates.commission_type = 'flat';
+      }
       
       const { error } = await supabase
         .from('invoice_items')
         .update(updates)
-        .eq('id', itemId)
+        .eq('id', itemId);
 
-      if (error) throw error
+      if (error) throw error;
 
-      await queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
-      toast.success("Commission updated successfully")
+      await queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+      toast.success("Commission updated successfully");
     } catch (error) {
-      console.error('Error updating commission:', error)
-      toast.error("Failed to update commission")
+      console.error('Error updating commission:', error);
+      toast.error("Failed to update commission");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const calculateCommissionAmount = (
     rate: number | null, 
@@ -68,12 +72,12 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
     quantity: number,
     unitPrice: number
   ) => {
-    if (!rate) return 0
+    if (!rate) return 0;
     if (type === 'percentage') {
-      return (quantity * unitPrice * rate) / 100
+      return (quantity * unitPrice * rate) / 100;
     }
-    return rate
-  }
+    return rate;
+  };
 
   return (
     <Card>
@@ -124,10 +128,10 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                     placeholder="Enter rate"
                     value={item.commission_rate || ''}
                     onChange={(e) => {
-                      const newRate = e.target.value ? parseFloat(e.target.value) : null
+                      const newRate = e.target.value ? parseFloat(e.target.value) : null;
                       handleUpdateCommission(item.id, {
                         commission_rate: newRate
-                      })
+                      });
                     }}
                   />
                 </div>
@@ -138,7 +142,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                     value={item.commission_type || "unset"}
                     onValueChange={(value) => 
                       handleUpdateCommission(item.id, {
-                        commission_type: value === "unset" ? null : value as 'percentage' | 'flat'
+                        commission_type: value === "unset" ? null : (value as 'percentage' | 'flat')
                       })
                     }
                   >
@@ -168,5 +172,5 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
