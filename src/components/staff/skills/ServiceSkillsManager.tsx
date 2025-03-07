@@ -1,238 +1,198 @@
 
-import { useState, useEffect } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { supabase } from '@/integrations/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Plus, X } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from 'sonner'
-import { useRemoveSkillMutation } from '@/components/staff/hooks/useRemoveSkillMutation'
+import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { useRemoveSkillMutation } from '../hooks/useRemoveSkillMutation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
-interface ServiceType {
-  id: string;
-  name: string;
-  description?: string;
+interface ServiceSkillsManagerProps {
+  profileId: string;
 }
 
-interface UserSkill {
-  id: string;
-  service_id: string;
-  proficiency_level: string;
-  service_types: ServiceType;
-}
+export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
+  const { user } = useAuth();
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+  const [proficiency, setProficiency] = useState<string>('beginner');
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const { removeSkill, isLoading: isRemoving } = useRemoveSkillMutation();
 
-export function ServiceSkillsManager() {
-  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([])
-  const [userId, setUserId] = useState<string | null>(null)
-
-  // Fetch the current user's ID
-  useEffect(() => {
-    const fetchUserId = async () => {
-      const { data } = await supabase.auth.getUser()
-      if (data.user) {
-        setUserId(data.user.id)
-      }
-    }
-    fetchUserId()
-  }, [])
-
-  // Fetch all available services
-  const { data: services, isLoading: servicesLoading } = useQuery({
-    queryKey: ['serviceTypes'],
+  // Fetch available services
+  const { data: services, isLoading: isLoadingServices } = useQuery({
+    queryKey: ['service-types'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('service_types')
-        .select('*')
-        .eq('status', 'active')
-        .order('name')
-      
-      if (error) throw error
-      return data || [] as ServiceType[]
-    },
-    enabled: !!userId
-  })
+        .select('id, name, description')
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   // Fetch user's current skills
-  const { 
-    data: userSkills, 
-    isLoading: skillsLoading,
-    refetch: refetchUserSkills 
-  } = useQuery({
-    queryKey: ['userSkills', userId],
+  const { data: userSkills, isLoading: isLoadingSkills, refetch: refetchSkills } = useQuery({
+    queryKey: ['profile-skills', profileId],
     queryFn: async () => {
-      if (!userId) return []
-      
       const { data, error } = await supabase
         .from('staff_service_skills')
         .select(`
           id,
           service_id,
-          proficiency_level,
-          service_types:service_id (
+          proficiency,
+          service_types (
             id,
             name,
             description
           )
         `)
-        .eq('staff_id', userId)
-      
-      if (error) throw error
-      return data || [] as UserSkill[]
-    },
-    enabled: !!userId
-  })
+        .eq('profile_id', profileId);
 
-  // Add new skills mutation
-  const addSkillsMutation = useMutation({
-    mutationFn: async () => {
-      if (!userId || selectedSkillIds.length === 0) return
-      
-      // Check which skills are not already added
-      const existingSkillIds = userSkills?.map(skill => skill.service_id) || []
-      const newSkillIds = selectedSkillIds.filter(id => !existingSkillIds.includes(id))
-      
-      if (newSkillIds.length === 0) {
-        toast.info("All selected skills are already added")
-        return
-      }
-      
-      // Create entries for new skills
-      const skillsToAdd = newSkillIds.map(serviceId => ({
-        staff_id: userId,
-        service_id: serviceId,
-        proficiency_level: 'beginner'
-      }))
-      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!profileId
+  });
+
+  const handleAddSkill = async () => {
+    if (!selectedServiceId) {
+      toast.error('Please select a service');
+      return;
+    }
+
+    // Check if the skill already exists
+    const existingSkill = userSkills?.find(skill => skill.service_id === selectedServiceId);
+    if (existingSkill) {
+      toast.error('You already have this skill added');
+      return;
+    }
+
+    setIsAddingSkill(true);
+    try {
       const { error } = await supabase
         .from('staff_service_skills')
-        .insert(skillsToAdd)
+        .insert({
+          profile_id: profileId,
+          service_id: selectedServiceId,
+          proficiency: proficiency
+        });
+
+      if (error) throw error;
       
-      if (error) throw error
-      
-      toast.success(`${newSkillIds.length} skill${newSkillIds.length > 1 ? 's' : ''} added successfully`)
-      setSelectedSkillIds([])
-      refetchUserSkills()
+      toast.success('Skill added successfully');
+      refetchSkills();
+      setSelectedServiceId('');
+      setProficiency('beginner');
+    } catch (error: any) {
+      console.error('Error adding skill:', error);
+      toast.error('Failed to add skill: ' + error.message);
+    } finally {
+      setIsAddingSkill(false);
     }
-  })
+  };
 
-  // Remove skill mutation using the custom hook
-  const { removeSkill, isLoading: isRemovalLoading } = useRemoveSkillMutation({
-    onSuccess: () => {
-      refetchUserSkills()
-    }
-  })
-
-  // Handle skill selection
-  const toggleSkillSelection = (skillId: string) => {
-    setSelectedSkillIds(prev => 
-      prev.includes(skillId)
-        ? prev.filter(id => id !== skillId)
-        : [...prev, skillId]
-    )
-  }
-
-  // Handle removing a skill
   const handleRemoveSkill = (skillId: string) => {
-    removeSkill(skillId)
-  }
+    removeSkill(skillId, {
+      onSuccess: () => {
+        refetchSkills();
+      }
+    });
+  };
 
-  // Get available services (excluding ones the user already has)
+  // Filter out services that the user already has
   const availableServices = services?.filter(service => 
     !userSkills?.some(skill => skill.service_id === service.id)
-  ) || []
-
-  // Loading states
-  if (!userId) {
-    return <div>Loading user information...</div>
-  }
+  );
 
   return (
-    <div className="space-y-8">
-      {/* User's current skills section */}
-      <div>
-        <h3 className="text-lg font-medium mb-4">My Skills</h3>
-        
-        {skillsLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-3/4" />
+    <div className="space-y-6">
+      <div className="bg-muted/50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium mb-4">Add New Skill</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Service</label>
+            <Select 
+              value={selectedServiceId} 
+              onValueChange={setSelectedServiceId}
+              disabled={isLoadingServices || isAddingSkill}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a service" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableServices?.map(service => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        ) : userSkills?.length === 0 ? (
-          <p className="text-muted-foreground">You haven't added any service skills yet.</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {userSkills?.map(skill => (
-              <Badge 
-                key={skill.id} 
-                variant="secondary"
-                className="pl-3 pr-2 py-1.5 text-sm flex items-center gap-1"
-              >
-                {skill.service_types.name}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5 rounded-full ml-1 hover:bg-destructive/10"
-                  onClick={() => handleRemoveSkill(skill.id)}
-                  disabled={isRemovalLoading}
-                >
-                  <X size={12} />
-                </Button>
-              </Badge>
-            ))}
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Proficiency</label>
+            <Select 
+              value={proficiency} 
+              onValueChange={setProficiency}
+              disabled={isAddingSkill}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="beginner">Beginner</SelectItem>
+                <SelectItem value="intermediate">Intermediate</SelectItem>
+                <SelectItem value="advanced">Advanced</SelectItem>
+                <SelectItem value="expert">Expert</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
+          
+          <div className="flex items-end">
+            <Button 
+              onClick={handleAddSkill} 
+              disabled={!selectedServiceId || isAddingSkill}
+              className="w-full md:w-auto"
+            >
+              {isAddingSkill ? 'Adding...' : 'Add Skill'}
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Add new skills section */}
       <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Add New Skills</h3>
-          <Button 
-            size="sm"
-            onClick={() => addSkillsMutation.mutate()}
-            disabled={selectedSkillIds.length === 0 || addSkillsMutation.isPending}
-          >
-            <Plus size={16} className="mr-1" />
-            Add Selected Skills
-          </Button>
-        </div>
-        
-        {servicesLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-3/4" />
-          </div>
-        ) : availableServices.length === 0 ? (
-          <p className="text-muted-foreground">
-            You've added all available service skills.
-          </p>
+        <h3 className="text-lg font-medium mb-4">Your Skills</h3>
+        {isLoadingSkills ? (
+          <p>Loading skills...</p>
+        ) : userSkills?.length === 0 ? (
+          <p className="text-muted-foreground">You haven't added any skills yet.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {availableServices.map(service => (
-              <div 
-                key={service.id}
-                className={`
-                  border rounded-md p-3 cursor-pointer transition-colors
-                  ${selectedSkillIds.includes(service.id) 
-                    ? 'bg-primary/10 border-primary/30' 
-                    : 'hover:bg-muted'
-                  }
-                `}
-                onClick={() => toggleSkillSelection(service.id)}
-              >
-                <div className="font-medium">{service.name}</div>
-                {service.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {service.description}
-                  </p>
-                )}
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {userSkills?.map(skill => (
+              <Card key={skill.id}>
+                <CardContent className="flex justify-between items-center p-4">
+                  <div>
+                    <h4 className="font-medium">{skill.service_types?.name}</h4>
+                    <p className="text-sm text-muted-foreground capitalize">{skill.proficiency}</p>
+                  </div>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleRemoveSkill(skill.id)}
+                    disabled={isRemoving}
+                  >
+                    Remove
+                  </Button>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

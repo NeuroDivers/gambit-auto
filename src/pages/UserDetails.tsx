@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PersonalInfoForm } from '@/components/profile/sections/PersonalInfoForm';
 import { PasswordChangeForm } from '@/components/profile/sections/PasswordChangeForm';
 import { DefaultCommissionForm } from '@/components/profile/sections/DefaultCommissionForm';
-import { StaffSkills } from '@/components/staff/StaffSkills';
+import StaffSkills from '@/components/staff/StaffSkills';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
+import { ProfileForm } from '@/components/profile/ProfileForm';
 
 export default function UserDetails() {
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ export default function UserDetails() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0">
-              <PersonalInfoForm />
+              <ProfileForm role={currentUserRole?.name} />
             </CardContent>
           </TabsContent>
           
@@ -95,7 +96,7 @@ export default function UserDetails() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0">
-              <PasswordChangeForm />
+              <ProfileForm />
             </CardContent>
           </TabsContent>
           
@@ -122,7 +123,7 @@ export default function UserDetails() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-0">
-                <DefaultCommissionForm />
+                <ProfileForm />
               </CardContent>
             </TabsContent>
           )}
