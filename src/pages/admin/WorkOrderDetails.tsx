@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,10 +13,12 @@ import { WorkOrder } from "@/components/work-orders/types";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { useWorkOrderInvoice } from "@/components/work-orders/hooks/useWorkOrderInvoice";
+import { toast } from "sonner";
 
 export default function WorkOrderDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const { createInvoice } = useWorkOrderInvoice();
 
@@ -67,6 +69,46 @@ export default function WorkOrderDetails() {
       setWorkOrder(data);
     }
   }, [data]);
+
+  // Set up real-time subscription for status changes
+  useEffect(() => {
+    if (!id) return;
+    
+    const channel = supabase
+      .channel('work-order-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'work_orders',
+          filter: `id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Work order change detected:', payload);
+          if (payload.new) {
+            // Update the workOrder state with the new data
+            setWorkOrder(prevWorkOrder => {
+              if (!prevWorkOrder) return payload.new as WorkOrder;
+              return { ...prevWorkOrder, ...payload.new };
+            });
+            
+            // Also invalidate the query to ensure all data is fresh
+            queryClient.invalidateQueries({ queryKey: ["workOrder", id] });
+            
+            // Show toast notification for status changes
+            if (payload.old && payload.old.status !== payload.new.status) {
+              toast.success(`Status updated to ${payload.new.status}`);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, queryClient]);
 
   if (isLoading) {
     return <LoadingScreen />;

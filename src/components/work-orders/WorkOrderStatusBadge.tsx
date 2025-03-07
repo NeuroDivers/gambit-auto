@@ -1,7 +1,6 @@
-
 import { Badge } from "@/components/ui/badge"
 import { WorkOrderStatus } from "./types"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -27,6 +26,12 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (status !== currentStatus) {
+      setCurrentStatus(status);
+    }
+  }, [status]);
 
   const handleStatusChange = async (newStatus: WorkOrderStatus) => {
     if (!workOrderId) return
