@@ -23,19 +23,20 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       const { data, error } = await supabase
         .from("customers")
         .select("*")
-        .order("customer_first_name", { ascending: true });
+        .order("first_name", { ascending: true });
 
       if (error) throw error;
-      return data;
+      console.log("Fetched customers:", data);
+      return data || [];
     },
   });
 
   const filteredCustomers = customers?.filter(
     (customer) =>
-      customer.customer_first_name?.toLowerCase().includes(search.toLowerCase()) ||
-      customer.customer_last_name?.toLowerCase().includes(search.toLowerCase()) ||
+      customer.first_name?.toLowerCase().includes(search.toLowerCase()) ||
+      customer.last_name?.toLowerCase().includes(search.toLowerCase()) ||
       customer.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  ) || [];
 
   const handleSelect = async (selectedValue: string) => {
     setValue(selectedValue);
@@ -48,8 +49,8 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     if (selectedCustomer) {
       try {
         // Set customer information
-        form.setValue("customer_first_name", selectedCustomer.customer_first_name || "");
-        form.setValue("customer_last_name", selectedCustomer.customer_last_name || "");
+        form.setValue("customer_first_name", selectedCustomer.first_name || "");
+        form.setValue("customer_last_name", selectedCustomer.last_name || "");
         form.setValue("customer_email", selectedCustomer.email || "");
         form.setValue("customer_phone", selectedCustomer.phone_number || "");
         form.setValue("customer_street_address", selectedCustomer.street_address || "");
@@ -120,9 +121,9 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       <CardContent>
         <Combobox
           items={
-            filteredCustomers?.map((customer) => ({
+            filteredCustomers.map((customer) => ({
               value: customer.id,
-              label: `${customer.customer_first_name} ${customer.customer_last_name} (${customer.email})`,
+              label: `${customer.first_name} ${customer.last_name} (${customer.email})`,
             })) || []
           }
           value={value}
