@@ -6,6 +6,7 @@ import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useEffect, useRef, useState } from "react"
+import { CustomerSearch } from "./form-sections/CustomerSearch"
 import { Loader2 } from "lucide-react"
 
 export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmitting }: WorkOrderFormProps) {
@@ -72,6 +73,8 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {!workOrder && <CustomerSearch form={form} />}
+        
         <FormSections 
           form={form}
           isSubmitting={isProcessing}
