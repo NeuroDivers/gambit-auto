@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -33,6 +34,11 @@ export default function WorkOrderDetails() {
           service_bays!fk_work_orders_assigned_bay (
             id,
             name
+          ),
+          profiles (
+            id,
+            first_name,
+            last_name
           ),
           work_order_services (
             id,
@@ -301,7 +307,9 @@ export default function WorkOrderDetails() {
             <div>
               <h3 className="font-medium">Assigned To</h3>
               <p className="text-sm text-muted-foreground">
-                {workOrder.assigned_profile_id ? "Staff Member" : "Unassigned"}
+                {workOrder.profiles?.first_name && workOrder.profiles?.last_name
+                  ? `${workOrder.profiles.first_name} ${workOrder.profiles.last_name}`
+                  : "Unassigned"}
               </p>
             </div>
           </CardContent>
