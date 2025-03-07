@@ -177,5 +177,5 @@ export function EditInvoiceForm({
         </div>
       </form>
     </Form>
-  )
+  );
 }

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -43,7 +43,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
         .order('name');
 
       if (error) throw error;
-      return data || [];
+      return data as ServiceType[] || [];
     }
   });
 
@@ -66,7 +66,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
         .eq('profile_id', profileId);
 
       if (error) throw error;
-      return data || [];
+      return data as StaffSkill[] || [];
     },
     enabled: !!profileId
   });
@@ -189,7 +189,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
               <Card key={skill.id}>
                 <CardContent className="flex justify-between items-center p-4">
                   <div>
-                    <h4 className="font-medium">{skill.service_types?.name}</h4>
+                    <h4 className="font-medium">{skill.service_types.name}</h4>
                     <p className="text-sm text-muted-foreground capitalize">{skill.proficiency}</p>
                   </div>
                   <Button 
