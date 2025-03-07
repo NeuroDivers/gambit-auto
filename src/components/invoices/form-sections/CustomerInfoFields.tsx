@@ -1,12 +1,9 @@
 
-import React from 'react';
-import { FormLabel } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomerInfoFieldsProps } from "./CustomerInfoFieldsProps";
 
-// Create component with default export that implements the props interface
-const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
+const CustomerInfoFields = ({ 
   customerFirstName,
   setCustomerFirstName,
   customerLastName,
@@ -34,124 +31,125 @@ const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
   setCustomerCountry,
   clientIdField,
   setClientId
-}) => {
+}: CustomerInfoFieldsProps) => {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <Label>First Name</Label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded"
+          <Label htmlFor="customerFirstName">First Name</Label>
+          <Input
+            id="customerFirstName"
+            placeholder="First name"
             value={customerFirstName}
             onChange={(e) => setCustomerFirstName(e.target.value)}
           />
         </div>
         <div>
-          <Label>Last Name</Label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded"
+          <Label htmlFor="customerLastName">Last Name</Label>
+          <Input
+            id="customerLastName"
+            placeholder="Last name"
             value={customerLastName}
             onChange={(e) => setCustomerLastName(e.target.value)}
           />
         </div>
       </div>
-      
       <div>
-        <Label>Email</Label>
-        <input
+        <Label htmlFor="customerEmail">Email</Label>
+        <Input
+          id="customerEmail"
           type="email"
-          className="w-full p-2 border rounded"
+          placeholder="Email address"
           value={customerEmail}
           onChange={(e) => setCustomerEmail(e.target.value)}
         />
       </div>
-      
       <div>
-        <Label>Phone</Label>
-        <input
-          type="tel"
-          className="w-full p-2 border rounded"
+        <Label htmlFor="customerPhone">Phone</Label>
+        <Input
+          id="customerPhone"
+          placeholder="Phone number"
           value={customerPhone || ''}
           onChange={(e) => setCustomerPhone(e.target.value)}
         />
       </div>
-      
-      {customerStreetAddress !== undefined && setCustomerStreetAddress && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Unit/Apt #</Label>
-            <input
-              type="text"
-              className="w-full p-2 border rounded"
-              value={customerUnitNumber || ''}
-              onChange={(e) => setCustomerUnitNumber && setCustomerUnitNumber(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label>Street Address</Label>
-            <input
-              type="text"
-              className="w-full p-2 border rounded"
-              value={customerStreetAddress || ''}
-              onChange={(e) => setCustomerStreetAddress(e.target.value)}
-            />
-          </div>
+      {setCustomerAddress && (
+        <div>
+          <Label htmlFor="customerAddress">Address</Label>
+          <Input
+            id="customerAddress"
+            placeholder="Complete address"
+            value={customerAddress || ''}
+            onChange={(e) => setCustomerAddress(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Detailed address fields if needed */}
+      {setCustomerStreetAddress && (
+        <div>
+          <Label htmlFor="customerStreetAddress">Street Address</Label>
+          <Input
+            id="customerStreetAddress"
+            placeholder="Street address"
+            value={customerStreetAddress || ''}
+            onChange={(e) => setCustomerStreetAddress(e.target.value)}
+          />
         </div>
       )}
       
-      {customerCity !== undefined && setCustomerCity && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {setCustomerUnitNumber && (
+        <div>
+          <Label htmlFor="customerUnitNumber">Unit/Apt</Label>
+          <Input
+            id="customerUnitNumber"
+            placeholder="Unit/Apt number"
+            value={customerUnitNumber || ''}
+            onChange={(e) => setCustomerUnitNumber(e.target.value)}
+          />
+        </div>
+      )}
+      
+      {setCustomerCity && setCustomerStateProvince && setCustomerPostalCode && (
+        <div className="grid grid-cols-3 gap-4">
           <div>
-            <Label>City</Label>
-            <input
-              type="text"
-              className="w-full p-2 border rounded"
+            <Label htmlFor="customerCity">City</Label>
+            <Input
+              id="customerCity"
+              placeholder="City"
               value={customerCity || ''}
               onChange={(e) => setCustomerCity(e.target.value)}
             />
           </div>
           <div>
-            <Label>State/Province</Label>
-            <input
-              type="text"
-              className="w-full p-2 border rounded"
+            <Label htmlFor="customerStateProvince">State/Province</Label>
+            <Input
+              id="customerStateProvince"
+              placeholder="State/Province"
               value={customerStateProvince || ''}
-              onChange={(e) => setCustomerStateProvince && setCustomerStateProvince(e.target.value)}
+              onChange={(e) => setCustomerStateProvince(e.target.value)}
             />
           </div>
           <div>
-            <Label>Postal Code</Label>
-            <input
-              type="text"
-              className="w-full p-2 border rounded"
+            <Label htmlFor="customerPostalCode">Postal Code</Label>
+            <Input
+              id="customerPostalCode"
+              placeholder="Postal code"
               value={customerPostalCode || ''}
-              onChange={(e) => setCustomerPostalCode && setCustomerPostalCode(e.target.value)}
+              onChange={(e) => setCustomerPostalCode(e.target.value)}
             />
           </div>
         </div>
       )}
       
-      {customerCountry !== undefined && setCustomerCountry && (
+      {setCustomerCountry && (
         <div>
-          <Label>Country</Label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded"
+          <Label htmlFor="customerCountry">Country</Label>
+          <Input
+            id="customerCountry"
+            placeholder="Country"
             value={customerCountry || ''}
             onChange={(e) => setCustomerCountry(e.target.value)}
-          />
-        </div>
-      )}
-      
-      {customerAddress !== undefined && setCustomerAddress && (
-        <div>
-          <Label>Full Address</Label>
-          <Textarea
-            className="w-full p-2 border rounded"
-            value={customerAddress || ''}
-            onChange={(e) => setCustomerAddress(e.target.value)}
           />
         </div>
       )}
@@ -159,6 +157,4 @@ const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
   );
 };
 
-// Export both the component as default and the type for flexibility
-export type { CustomerInfoFieldsProps };
 export default CustomerInfoFields;

@@ -36,10 +36,10 @@ export function useStaffSkills(profileId: string) {
         service_id: item.service_id,
         proficiency: item.proficiency,
         service_types: {
-          // Use proper type casting and access properties safely with optional chaining
-          id: item.service_types?.id || "",
-          name: item.service_types?.name || "",
-          description: item.service_types?.description || ""
+          // Use proper type casting to access service_types properties
+          id: item.service_types ? (item.service_types as any).id || "" : "",
+          name: item.service_types ? (item.service_types as any).name || "" : "",
+          description: item.service_types ? (item.service_types as any).description || "" : ""
         } as ServiceType
       })) as StaffSkill[];
     }
