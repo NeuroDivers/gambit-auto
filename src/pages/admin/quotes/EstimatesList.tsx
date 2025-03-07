@@ -81,7 +81,7 @@ export default function EstimatesList() {
         <Checkbox
           checked={
             table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "mixed")
+            (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
@@ -109,7 +109,7 @@ export default function EstimatesList() {
       accessorKey: "client_name",
       header: "Client",
       cell: ({ row }) => (
-        <span>{row.original.client_name || 'N/A'}</span> // Using a string wrapped in a span instead of an Element
+        <span>{row.original.client_name || 'N/A'}</span>
       ),
     },
     {
@@ -193,8 +193,23 @@ export default function EstimatesList() {
   const table = useReactTable({
     data: estimates,
     columns,
-    onRowSelectionChange: setSelectedEstimateIds,
     getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: (updaterOrValue) => {
+      if (typeof updaterOrValue === 'function') {
+        setSelectedEstimateIds(prev => {
+          const selectionState = updaterOrValue({});
+          return Object.keys(selectionState).filter(key => selectionState[key]);
+        });
+      } else {
+        setSelectedEstimateIds(Object.keys(updaterOrValue).filter(key => updaterOrValue[key]));
+      }
+    },
+    state: {
+      rowSelection: selectedEstimateIds.reduce((acc, id) => {
+        acc[id] = true;
+        return acc;
+      }, {} as Record<string, boolean>),
+    }
   })
 
   const handleArchiveSelected = async () => {
@@ -298,7 +313,7 @@ export default function EstimatesList() {
       {isLoading ? (
         <div>Loading estimates...</div>
       ) : error ? (
-        <div>Error: {error.message}</div>
+        <div>Error: {(error as Error).message}</div>
       ) : (
         <div className="rounded-md border">
           <Table>

@@ -873,6 +873,7 @@ export type Database = {
           customer_vehicle_year: number | null
           estimate_number: string
           id: string
+          is_archived: boolean | null
           status: string
           subtotal: number
           tax_amount: number
@@ -904,6 +905,7 @@ export type Database = {
           customer_vehicle_year?: number | null
           estimate_number: string
           id?: string
+          is_archived?: boolean | null
           status?: string
           subtotal?: number
           tax_amount?: number
@@ -935,6 +937,7 @@ export type Database = {
           customer_vehicle_year?: number | null
           estimate_number?: string
           id?: string
+          is_archived?: boolean | null
           status?: string
           subtotal?: number
           tax_amount?: number
