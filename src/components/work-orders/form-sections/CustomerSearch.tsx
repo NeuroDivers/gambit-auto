@@ -3,7 +3,6 @@ import { UseFormReturn } from "react-hook-form";
 import { WorkOrderFormValues } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomerInfoFields } from "@/components/invoices/form-sections/CustomerInfoFields";
-import { AddressFields } from "@/components/shared/form-sections/AddressFields";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -91,11 +90,6 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           setCustomerCountry={(value) => form.setValue('customer_country', value)}
           onCustomerSelect={onCustomerSelect}
           setClientId={(value) => form.setValue('client_id', value)}
-        />
-        
-        <AddressFields 
-          form={form} 
-          fieldPrefix="customer_" 
         />
       </CardContent>
     </Card>
