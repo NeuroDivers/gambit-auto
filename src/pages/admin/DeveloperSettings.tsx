@@ -11,16 +11,16 @@ export default function DeveloperSettings() {
       <PageTitle>Developer Settings</PageTitle>
       
       <Tabs defaultValue="theme" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 w-full sm:w-auto">
           <TabsTrigger value="theme">Theme Management</TabsTrigger>
           <TabsTrigger value="cache">Cache Management</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="theme">
+        <TabsContent value="theme" className="mt-6">
           <ThemeColorManager />
         </TabsContent>
         
-        <TabsContent value="cache">
+        <TabsContent value="cache" className="mt-6">
           <CacheClearManager />
         </TabsContent>
       </Tabs>
