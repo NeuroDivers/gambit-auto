@@ -53,47 +53,8 @@ export function ClientInfoFields({
   };
   
   return <div className="space-y-6">
-      {/* Button to select an existing customer */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogTrigger asChild>
-          <Button type="button" variant="outline" className="mb-2 w-full sm:w-auto">
-            <Search className="h-4 w-4 mr-2" />
-            Select Existing Customer
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Select Customer</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search customers..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-            </div>
-            
-            {isLoading ? <div className="text-center py-4">Loading customers...</div> : <div className="grid gap-2">
-                {customers && customers.length > 0 ? customers.map(customer => <div key={customer.id} className="flex justify-between items-center p-3 border rounded-md hover:bg-muted cursor-pointer" onClick={() => handleSelectCustomer(customer.id)}>
-                      <div>
-                        <p className="font-medium">
-                          {customer.customer_first_name} {customer.customer_last_name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {customer.customer_email}
-                        </p>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {customer.customer_phone}
-                      </div>
-                    </div>) : <div className="text-center py-4 text-muted-foreground">
-                    No customers found
-                  </div>}
-              </div>}
-          </div>
-        </DialogContent>
-      </Dialog>
-      
       {/* Address AutoComplete */}
-      <div className="mb-4">
+      <div>
         <AddressAutocomplete 
           form={form} 
           fieldPrefix="customer_" 
