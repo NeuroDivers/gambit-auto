@@ -61,7 +61,7 @@ export const WorkOrderTable = memo(({
                   </div>
                 </TableCell>
                 <TableCell>
-                  {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
+                  {workOrder.customer_vehicle_year} {workOrder.customer_vehicle_make} {workOrder.customer_vehicle_model}
                 </TableCell>
                 <TableCell>
                   <WorkOrderStatusBadge 
@@ -74,7 +74,7 @@ export const WorkOrderTable = memo(({
                   {workOrder.created_at ? formatDate(workOrder.created_at) : '-'}
                 </TableCell>
                 <TableCell>
-                  {workOrder.service_bays?.name || 'Unassigned'}
+                  {workOrder.service_bay?.name || 'Unassigned'}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

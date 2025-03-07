@@ -1,3 +1,4 @@
+
 export type WorkOrderStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'invoiced' | 'estimated';
 
 export type WorkOrder = {
@@ -25,6 +26,7 @@ export type WorkOrder = {
   estimated_duration?: number;
   assigned_bay_id?: string;
   assigned_profile_id?: string;
+  client_id?: string;
   profiles: {
     id: string | null;
     first_name: string | null;

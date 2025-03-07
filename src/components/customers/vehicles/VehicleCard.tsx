@@ -55,13 +55,13 @@ export function VehicleCard({ vehicle, onEdit, isPrimary = false, onSetPrimary }
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-medium">
-                {vehicle.year} {vehicle.make} {vehicle.model}
+                {vehicle.customer_vehicle_year} {vehicle.customer_vehicle_make} {vehicle.customer_vehicle_model}
               </h3>
               {isPrimary && (
                 <Star className="h-4 w-4 fill-primary text-primary" />
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{vehicle.vin || "No VIN"}</p>
+            <p className="text-sm text-muted-foreground">{vehicle.customer_vehicle_vin || "No VIN"}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="icon" onClick={() => onEdit(vehicle)}>
@@ -76,29 +76,29 @@ export function VehicleCard({ vehicle, onEdit, isPrimary = false, onSetPrimary }
       <CardContent>
         <div className="grid grid-cols-2 gap-y-2 text-sm">
           <div className="text-muted-foreground">Color:</div>
-          <div>{vehicle.color || "N/A"}</div>
+          <div>{vehicle.customer_vehicle_color || "N/A"}</div>
           
           <div className="text-muted-foreground">License:</div>
-          <div>{vehicle.license_plate || "N/A"}</div>
+          <div>{vehicle.customer_vehicle_license_plate || "N/A"}</div>
           
-          {vehicle.body_class && (
+          {vehicle.customer_vehicle_body_class && (
             <>
               <div className="text-muted-foreground">Body Type:</div>
-              <div>{vehicle.body_class}</div>
+              <div>{vehicle.customer_vehicle_body_class}</div>
             </>
           )}
           
-          {vehicle.trim && (
+          {vehicle.customer_vehicle_trim && (
             <>
               <div className="text-muted-foreground">Trim:</div>
-              <div>{vehicle.trim}</div>
+              <div>{vehicle.customer_vehicle_trim}</div>
             </>
           )}
           
-          {vehicle.doors && (
+          {vehicle.customer_vehicle_doors && (
             <>
               <div className="text-muted-foreground">Doors:</div>
-              <div>{vehicle.doors}</div>
+              <div>{vehicle.customer_vehicle_doors}</div>
             </>
           )}
         </div>
@@ -128,7 +128,7 @@ export function VehicleCard({ vehicle, onEdit, isPrimary = false, onSetPrimary }
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Vehicle</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this {vehicle.year} {vehicle.make} {vehicle.model}? 
+              Are you sure you want to delete this {vehicle.customer_vehicle_year} {vehicle.customer_vehicle_make} {vehicle.customer_vehicle_model}? 
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

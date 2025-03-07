@@ -56,7 +56,7 @@ export function WorkOrderMobileList({
               <div className="flex items-center text-muted-foreground">
                 <Car className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span className="truncate">
-                  {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
+                  {workOrder.customer_vehicle_year} {workOrder.customer_vehicle_make} {workOrder.customer_vehicle_model}
                 </span>
               </div>
 

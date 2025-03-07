@@ -18,25 +18,25 @@ export function VehicleCard({ vehicle, onEdit, onDelete }: VehicleCardProps) {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-semibold">
-                {vehicle.year} {vehicle.make} {vehicle.model}
+                {vehicle.customer_vehicle_year} {vehicle.customer_vehicle_make} {vehicle.customer_vehicle_model}
               </h3>
               {vehicle.is_primary && (
                 <Star className="h-4 w-4 fill-primary text-primary" />
               )}
             </div>
-            {vehicle.vin && (
+            {vehicle.customer_vehicle_vin && (
               <p className="text-sm text-muted-foreground">
-                VIN: {vehicle.vin}
+                VIN: {vehicle.customer_vehicle_vin}
               </p>
             )}
-            {vehicle.license_plate && (
+            {vehicle.customer_vehicle_license_plate && (
               <p className="text-sm text-muted-foreground">
-                License: {vehicle.license_plate}
+                License: {vehicle.customer_vehicle_license_plate}
               </p>
             )}
-            {vehicle.color && (
+            {vehicle.customer_vehicle_color && (
               <p className="text-sm text-muted-foreground">
-                Color: {vehicle.color}
+                Color: {vehicle.customer_vehicle_color}
               </p>
             )}
             {vehicle.notes && (
