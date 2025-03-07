@@ -6,7 +6,7 @@ interface SkillsListProps {
   skills: StaffSkill[];
   isLoading: boolean;
   onRemove: (skillId: string) => void;
-  isRemoving: boolean;
+  isRemoving?: boolean;
   onUpdate?: (skillId: string, level: string) => void;
 }
 

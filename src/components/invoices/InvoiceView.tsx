@@ -1,6 +1,5 @@
 
 import { useForm } from "react-hook-form"
-import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoiceFormValues, PrintRef } from "./types"
 import { useInvoiceData } from "./hooks/useInvoiceData"
 import { useInvoiceMutation } from "./hooks/useInvoiceMutation"
@@ -134,29 +133,15 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
     }
   }, [invoice, form])
 
-  const handleSubmit = async (values: InvoiceFormValues) => {
-    try {
-      await updateInvoiceMutation.mutateAsync(values)
-      toast.success("Invoice updated successfully")
-      onClose?.()
-    } catch (error) {
-      toast.error("Failed to update invoice")
-    }
-  }
-
   if (isInvoiceLoading || isBusinessLoading) {
     return <LoadingState />
   }
 
-  if (isEditing) {
-    return (
-      <EditInvoiceForm 
-        form={form} 
-        onSubmit={handleSubmit}
-        isPending={updateInvoiceMutation.isPending}
-        invoiceId={invoiceId || ''}
-      />
-    )
+  // If editing mode is requested, redirect to the edit page instead
+  if (isEditing && onClose) {
+    // Simply close the dialog as we'll navigate to edit page instead
+    onClose()
+    return null
   }
 
   // Create the printRef object that follows our PrintRef interface
