@@ -14,3 +14,9 @@ export interface StaffSkill {
     description: string;
   };
 }
+
+export interface ServiceType {
+  id: string;
+  name: string;
+  description: string;
+}

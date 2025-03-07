@@ -39,3 +39,6 @@ export function StaffSkills({ profileId, isCurrentUser }: StaffSkillsProps) {
     </Card>
   );
 }
+
+// Add a default export for the component
+export default StaffSkills;

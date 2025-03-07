@@ -28,3 +28,6 @@ export interface CustomerInfoFieldsProps {
   clientIdField?: string;
   setClientId?: (value: string) => void;
 }
+
+// Add a default export that points to the type
+export default CustomerInfoFieldsProps;

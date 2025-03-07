@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { InvoiceItemsFields } from "../form-sections/InvoiceItemsFields";
 import { InvoiceNotesField } from "../form-sections/InvoiceNotesField";
 import CustomerInfoFields from "@/components/invoices/form-sections/CustomerInfoFields";
-import { VehicleInfoFields } from "../form-sections/VehicleInfoFields";
+import VehicleInfoFields from "../form-sections/VehicleInfoFields";
 import { InvoiceStatusField } from "../form-sections/InvoiceStatusField";
 import { InvoiceServiceItems } from "../form-sections/InvoiceServiceItems";
 import { WorkOrderSelect } from "../form-sections/WorkOrderSelect";
@@ -102,6 +102,11 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
     calculateTotals();
   }, [invoiceItems, businessProfile, form]);
 
+  const handleWorkOrderSelect = async (workOrderId: string) => {
+    form.setValue('work_order_id', workOrderId);
+    return Promise.resolve();
+  };
+
   const handleFormSubmit = async (data: InvoiceFormValues) => {
     try {
       // Include the invoice items
@@ -144,9 +149,8 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
             <CardContent>
               <WorkOrderSelect
                 value={form.watch('work_order_id')}
-                onChange={(workOrderId) => {
-                  form.setValue('work_order_id', workOrderId);
-                }}
+                onChange={handleWorkOrderSelect}
+                workOrders={[]}
               />
             </CardContent>
           </Card>

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { StaffSkill } from "../types";
+import { StaffSkill, ServiceType } from "../types";
 
 export const useStaffSkills = (profileId: string) => {
   const queryClient = useQueryClient();
@@ -35,15 +35,15 @@ export const useStaffSkills = (profileId: string) => {
         serviceTypeId: item.service_type_id,
         expertiseLevel: item.expertise_level,
         profileId: item.profile_id,
-        serviceName: item.service_types ? item.service_types.name : "",
-        serviceDescription: item.service_types ? item.service_types.description : "",
+        serviceName: item.service_types?.name || "",
+        serviceDescription: item.service_types?.description || "",
         // Add these fields to satisfy the type
         service_id: item.service_type_id,
         proficiency: item.expertise_level,
         service_types: {
-          id: item.service_types ? item.service_types.id : "",
-          name: item.service_types ? item.service_types.name : "",
-          description: item.service_types ? item.service_types.description : ""
+          id: item.service_types?.id || "",
+          name: item.service_types?.name || "",
+          description: item.service_types?.description || ""
         }
       })) as StaffSkill[];
     },
@@ -62,7 +62,7 @@ export const useStaffSkills = (profileId: string) => {
         throw error;
       }
 
-      return data;
+      return data as ServiceType[];
     },
   });
 

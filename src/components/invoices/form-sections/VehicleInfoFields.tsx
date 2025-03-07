@@ -22,6 +22,13 @@ export interface VehicleInfoFieldsProps {
   setColor?: (value: string) => void;
   licensePlate?: string;
   setLicensePlate?: (value: string) => void;
+  trim?: string;
+  setTrim?: (value: string) => void;
+  bodyClass?: string;
+  setBodyClass?: (value: string) => void;
+  doors?: number | string;
+  setDoors?: (value: number | string) => void;
+  customerId?: string | null;
   
   // Alternative naming props
   vehicleMake?: string;
@@ -36,6 +43,12 @@ export interface VehicleInfoFieldsProps {
   setVehicleColor?: (value: string) => void;
   vehicleLicensePlate?: string;
   setVehicleLicensePlate?: (value: string) => void;
+  vehicleTrim?: string;
+  setVehicleTrim?: (value: string) => void;
+  vehicleBodyClass?: string;
+  setVehicleBodyClass?: (value: string) => void;
+  vehicleDoors?: number | string;
+  setVehicleDoors?: (value: number | string) => void;
 }
 
 const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
@@ -48,13 +61,20 @@ const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   vin, setVin,
   color, setColor,
   licensePlate, setLicensePlate,
+  trim, setTrim,
+  bodyClass, setBodyClass,
+  doors, setDoors,
   
   vehicleMake, setVehicleMake,
   vehicleModel, setVehicleModel,
   vehicleYear, setVehicleYear,
   vehicleVin, setVehicleVin,
   vehicleColor, setVehicleColor,
-  vehicleLicensePlate, setVehicleLicensePlate
+  vehicleLicensePlate, setVehicleLicensePlate,
+  vehicleTrim, setVehicleTrim,
+  vehicleBodyClass, setVehicleBodyClass,
+  vehicleDoors, setVehicleDoors,
+  customerId
 }) => {
   const formContext = useFormContext();
   const isUsingForm = !!formContext;
@@ -66,6 +86,9 @@ const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   const actualVin = vin || vehicleVin || '';
   const actualColor = color || vehicleColor || '';
   const actualLicensePlate = licensePlate || vehicleLicensePlate || '';
+  const actualTrim = trim || vehicleTrim || '';
+  const actualBodyClass = bodyClass || vehicleBodyClass || '';
+  const actualDoors = doors || vehicleDoors || '';
   
   const handleMakeChange = (value: string) => {
     if (setMake) setMake(value);
@@ -96,6 +119,22 @@ const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   const handleLicensePlateChange = (value: string) => {
     if (setLicensePlate) setLicensePlate(value);
     if (setVehicleLicensePlate) setVehicleLicensePlate(value);
+  };
+  
+  const handleTrimChange = (value: string) => {
+    if (setTrim) setTrim(value);
+    if (setVehicleTrim) setVehicleTrim(value);
+  };
+  
+  const handleBodyClassChange = (value: string) => {
+    if (setBodyClass) setBodyClass(value);
+    if (setVehicleBodyClass) setVehicleBodyClass(value);
+  };
+  
+  const handleDoorsChange = (value: string) => {
+    const numValue = parseInt(value) || 0;
+    if (setDoors) setDoors(numValue);
+    if (setVehicleDoors) setVehicleDoors(numValue);
   };
 
   if (isUsingForm) {
@@ -295,4 +334,5 @@ const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   );
 };
 
+export { VehicleInfoFields };
 export default VehicleInfoFields;

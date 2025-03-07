@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form"
 import { EditInvoiceForm } from './sections/EditInvoiceForm'
-import { InvoiceFormValues } from "./types"
+import { InvoiceFormValues, PrintRef } from "./types"
 import { useInvoiceData } from "./hooks/useInvoiceData"
 import { useInvoiceMutation } from "./hooks/useInvoiceMutation"
 import { useEffect, useRef, useState } from "react"
@@ -157,6 +157,12 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
         invoiceId={invoiceId || ''}
       />
     )
+  }
+
+  // Create the printRef object that follows our PrintRef interface
+  const printRefObject: PrintRef = {
+    handlePrint,
+    printRef
   }
 
   return (
